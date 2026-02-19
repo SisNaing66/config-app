@@ -1,11 +1,10 @@
 {
   "name": "Config Transformer",
   "short_name": "ConfigApp",
-  "start_url": "./",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#4f46e5",
   "theme_color": "#4f46e5",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
