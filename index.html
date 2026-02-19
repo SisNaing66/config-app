@@ -1,205 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Config Transformer</title>
-    ​<link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#4f46e5">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class', 
-            theme: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'], } } }
-        }
-    </script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Config Transformer</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen p-4 md:p-8 flex flex-col justify-center items-center">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-    <div class="w-full max-w-md relative">
-        
-        <button onclick="toggleTheme()" class="absolute top-4 right-4 z-10 p-3 rounded-full bg-white/80 dark:bg-slate-700/80 backdrop-blur-md shadow-lg border border-gray-100 dark:border-slate-600 active:scale-95 transition-transform duration-150">
-            <span id="themeIcon" class="text-xl leading-none block">🌙</span>
-        </button>
+<h1 class="text-3xl font-bold text-center">Config Transformer</h1>
 
-        <div class="mt-8 md:mt-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-white/50 dark:border-slate-700/50">
-            
-            <div class="text-center mb-8 pt-4">
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mb-1">
-                    CONFIG
-                </h1>
-                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-200">TRANSFORMER</h2>
-                <div class="mt-2 inline-block bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full font-semibold tracking-widest uppercase border border-blue-200 dark:border-blue-800">
-                    VLESS-WS to Custom
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="text-indigo-600 dark:text-indigo-400 text-xs font-bold flex items-center mb-2 uppercase tracking-wider">
-                    <span class="mr-2">🌐</span> Target Domain Setting
-                </label>
-                <div class="relative">
-                    <input type="text" id="targetDomain" placeholder="e.g. jp.juliuscaesar69.com" 
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-2xl py-3 px-4 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 text-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-sm transition-all">
-                </div>
-                
-                <div class="flex gap-3">
-                    <button class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-2xl shadow-lg shadow-blue-200 dark:shadow-none active:scale-95 transition-transform duration-150">
-                        💾 Save
-                    </button>
-                    <button onclick="document.getElementById('targetDomain').value=''" class="flex-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-semibold py-3 rounded-2xl hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 active:scale-95 transition-transform duration-150">
-                        Clear
-                    </button>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="text-gray-500 dark:text-gray-400 text-xs font-bold mb-2 block uppercase tracking-wider">Paste Original VLESS Link:</label>
-                <textarea id="originalLink" rows="4" 
-                          class="w-full bg-slate-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-2xl py-3 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 text-gray-600 dark:text-gray-300 text-sm font-mono break-all shadow-inner placeholder-gray-400 dark:placeholder-gray-500"
-                          placeholder="vless://..."></textarea>
-                
-                <button onclick="generateCustomLink()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95 transition-transform duration-150 uppercase tracking-widest text-sm">
-                    Generate Custom Format
-                </button>
-            </div>
-
-            <div id="resultContainer" class="hidden mb-6">
-                <label class="text-emerald-500 dark:text-emerald-400 text-xs font-bold flex items-center mb-2 uppercase tracking-wider">
-                    <span class="mr-2">✅</span> Transformation Success!
-                </label>
-                <div class="relative">
-                    <textarea id="resultLink" rows="5" readonly
-                              class="w-full bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl py-3 px-4 mb-3 text-gray-700 dark:text-emerald-100 text-xs font-mono break-all shadow-inner"></textarea>
-                </div>
-                
-                <button onclick="copyToClipboard()" class="w-full bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none active:scale-95 transition-transform duration-150 flex justify-center items-center gap-2">
-                    <span>📋</span> Copy Link
-                </button>
-            </div>
-
-            <div class="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700">
-                <div class="flex items-center justify-center">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 font-extrabold text-lg tracking-wide uppercase">
-                        SisNaing
-                    </span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
-        const themeIcon = document.getElementById('themeIcon');
-        function updateThemeIcon() {
-            if (document.documentElement.classList.contains('dark')) {
-                themeIcon.innerHTML = '☀️'; 
-            } else {
-                themeIcon.innerHTML = '🌙'; 
-            }
-        }
-        updateThemeIcon();
-
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.theme = 'light';
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.theme = 'dark';
-            }
-            updateThemeIcon();
-        }
-
-        function generateCustomLink() {
-            const targetDomain = document.getElementById('targetDomain').value.trim();
-            const originalLink = document.getElementById('originalLink').value.trim();
-
-            if (!targetDomain) { alert("Please enter a Target Domain!"); return; }
-            if (!originalLink.startsWith("vless://")) { alert("Please paste a valid VLESS link!"); return; }
-
-            try {
-                const parts = originalLink.split('#');
-                const urlPart = parts[0];
-                const originalRemark = parts[1] || ''; 
-
-                const url = new URL(urlPart);
-                const uuid = url.username; 
-                const originalPath = url.searchParams.get('path') || '/';
-
-                const newParams = new URLSearchParams();
-                newParams.set('path', originalPath);
-                newParams.set('security', 'tls');
-                newParams.set('alpn', 'http/1.1');
-                newParams.set('encryption', 'none');
-                newParams.set('host', targetDomain);
-                newParams.set('fp', 'chrome');
-                newParams.set('type', 'ws');
-                newParams.set('sni', targetDomain);
-
-                const customLink = `vless://${uuid}@${targetDomain}:443?${newParams.toString()}#${originalRemark}`;
-
-                document.getElementById('resultLink').value = customLink;
-                
-                const resultContainer = document.getElementById('resultContainer');
-                resultContainer.classList.remove('hidden');
-                
-                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-            } catch (error) {
-                alert("Error parsing the link. Please check your VLESS format.");
-                console.error(error);
-            }
-        }
-
-        function copyToClipboard() {
-            const resultTextarea = document.getElementById('resultLink');
-            resultTextarea.select();
-            document.execCommand('copy');
-            
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span>✅</span> Copied!';
-            
-            if(document.documentElement.classList.contains('dark')){
-                btn.classList.replace('dark:bg-emerald-600', 'dark:bg-emerald-500');
-            } else {
-                btn.classList.replace('bg-emerald-500', 'bg-emerald-600');
-            }
-            
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                if(document.documentElement.classList.contains('dark')){
-                    btn.classList.replace('dark:bg-emerald-500', 'dark:bg-emerald-600');
-                } else {
-                    btn.classList.replace('bg-emerald-600', 'bg-emerald-500');
-                }
-            }, 2000);
-        }
-    </script>
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker Registered'))
-      .catch(err => console.log('Service Worker Failed', err));
-  });
+  navigator.serviceWorker.register('./service-worker.js')
+  .then(() => console.log("SW registered"))
+  .catch(err => console.log(err));
 }
 </script>
+
 </body>
 </html>
