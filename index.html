@@ -3,134 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Config Transformer</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4f46e5">
-<link rel="icon" href="icon-192.png">
-
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;}
-.bg-anim{
-background:linear-gradient(-45deg,#6366f1,#8b5cf6,#0ea5e9,#4f46e5);
-background-size:300% 300%;
-animation:grad 10s ease infinite;
+body{font-family:sans-serif;}
+.portBtn{
+padding:10px;
+border-radius:12px;
+background:#e5e7eb;
 }
-@keyframes grad{
-0%{background-position:0% 50%}
-50%{background-position:100% 50%}
-100%{background-position:0% 50%}
-}
-.glass{
-backdrop-filter:blur(20px);
-background:rgba(255,255,255,.75);
-}
-.dark .glass{
-background:rgba(15,23,42,.75);
+.portBtn.active{
+background:#6366f1;
+color:white;
 }
 </style>
-
-<script>
-if(localStorage.theme==='dark'||
-(!('theme'in localStorage)&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
-document.documentElement.classList.add('dark');
-}
-</script>
 </head>
 
-<body class="bg-anim min-h-screen flex items-center justify-center p-4 transition">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-<div class="glass w-full max-w-md rounded-3xl shadow-2xl p-8 border border-white/40 dark:border-slate-700">
+<div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
 
-<div class="flex justify-between items-center mb-6">
-<span class="px-3 py-1 text-xs font-bold bg-indigo-600 text-white rounded-full">PREMIUM</span>
-<button onclick="toggleTheme()" class="text-xl">🌓</button>
-</div>
-
-<h1 class="text-3xl font-bold text-center mb-6 text-indigo-700 dark:text-indigo-300">
+<h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">
 Config Transformer
 </h1>
 
-<!-- Domain -->
-<input id="targetDomain" type="text" placeholder="Target Domain"
-class="w-full p-3 mb-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600">
+<!-- TARGET DOMAIN -->
+<label class="font-semibold">Target Domain</label>
+<input id="targetDomain" type="text"
+class="w-full p-2 mb-4 rounded border">
 
-<div class="flex gap-2 mb-4">
-<button onclick="saveDomain()" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl">
-Save
-</button>
-<button onclick="clearDomain()" class="flex-1 bg-gray-300 dark:bg-slate-700 py-2 rounded-xl">
-Clear
-</button>
+<!-- TARGET PORT -->
+<label class="font-semibold">Target Port</label>
+<div class="grid grid-cols-3 gap-2 mb-4">
+<button onclick="setPort(443)" class="portBtn active">443</button>
+<button onclick="setPort(2053)" class="portBtn">2053</button>
+<button onclick="setPort(2083)" class="portBtn">2083</button>
+<button onclick="setPort(2087)" class="portBtn">2087</button>
+<button onclick="setPort(2096)" class="portBtn">2096</button>
+<button onclick="setPort(8443)" class="portBtn">8443</button>
 </div>
+<input type="hidden" id="selectedPort" value="443">
 
-<!-- Original -->
+<!-- SNI -->
+<label class="font-semibold">SNI / Bug Domain</label>
+<select id="sniSelect" onchange="handleSNIChange()"
+class="w-full p-2 mb-3 rounded border">
+<option value="default">Default (Use Target Domain)</option>
+<option value="mpt.com.mm">mpt.com.mm</option>
+<option value="speedtest.net">speedtest.net</option>
+<option value="wavemoney.com.mm">wavemoney.com.mm</option>
+<option value="custom">Custom Input...</option>
+</select>
+
+<input id="customSNI" type="text"
+placeholder="Enter Custom SNI"
+class="w-full p-2 mb-4 rounded border hidden">
+
+<!-- TARGET SERVER -->
+<label class="font-semibold">Target Server Address</label>
+<input id="targetServer" type="text"
+class="w-full p-2 mb-4 rounded border">
+
+<!-- ORIGINAL -->
+<label class="font-semibold">Original VLESS</label>
 <textarea id="originalLink" rows="3"
-class="w-full p-3 mb-4 rounded-xl border dark:bg-slate-800 dark:border-slate-600"
-placeholder="Paste Original VLESS"></textarea>
+class="w-full p-2 mb-4 rounded border"></textarea>
 
 <button onclick="generateCustomLink()"
-class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold mb-4">
+class="w-full bg-indigo-600 text-white py-2 rounded mb-4">
 Generate
 </button>
 
-<!-- Result -->
-<div class="relative">
 <textarea id="resultLink" rows="3"
-class="w-full p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600"
-placeholder="Result here..."
+class="w-full p-2 rounded border"
 readonly></textarea>
-
-<button onclick="copyResult()" 
-class="absolute right-3 top-3 bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm">
-Copy
-</button>
-</div>
-
-<div class="text-center mt-6 text-sm dark:text-gray-300">
-Developer: <span class="font-semibold">SisNaing</span>
-</div>
 
 </div>
 
 <script>
 
-// Theme
-function toggleTheme(){
-document.documentElement.classList.toggle('dark');
-localStorage.theme=document.documentElement.classList.contains('dark')?'dark':'light';
+function setPort(port){
+document.getElementById("selectedPort").value=port;
+document.querySelectorAll(".portBtn").forEach(btn=>{
+btn.classList.remove("active");
+if(btn.innerText==port)btn.classList.add("active");
+});
 }
 
-// Save Domain
-function saveDomain(){
-const d=document.getElementById("targetDomain").value.trim();
-if(!d)return alert("Enter domain first");
-localStorage.setItem("savedDomain",d);
-alert("Domain Saved");
+function handleSNIChange(){
+const value=document.getElementById("sniSelect").value;
+const custom=document.getElementById("customSNI");
+if(value==="custom"){
+custom.classList.remove("hidden");
+}else{
+custom.classList.add("hidden");
+}
 }
 
-// Load Saved Domain
-window.onload=function(){
-const saved=localStorage.getItem("savedDomain");
-if(saved)document.getElementById("targetDomain").value=saved;
-}
-
-// Clear
-function clearDomain(){
-document.getElementById("targetDomain").value="";
-localStorage.removeItem("savedDomain");
-}
-
-// Generate
 function generateCustomLink(){
 const domain=document.getElementById("targetDomain").value.trim();
 const original=document.getElementById("originalLink").value.trim();
+const port=document.getElementById("selectedPort").value;
+const server=document.getElementById("targetServer").value.trim();
 
-if(!domain||!original.startsWith("vless://")){
+let sni=document.getElementById("sniSelect").value;
+if(sni==="default") sni=domain;
+if(sni==="custom") sni=document.getElementById("customSNI").value.trim();
+
+if(!domain||!original.startsWith("vless://")||!server){
 alert("Check input");return;
 }
 
@@ -138,7 +120,7 @@ try{
 const parts=original.split('#');
 const url=new URL(parts[0]);
 const uuid=url.username;
-const remark=parts[1]||"";   // 🔥 original remark keep
+const remark=parts[1]||"";
 const path=url.searchParams.get("path")||"/";
 
 const params=new URLSearchParams();
@@ -146,9 +128,9 @@ params.set("path",path);
 params.set("security","tls");
 params.set("type","ws");
 params.set("host",domain);
-params.set("sni",domain);
+params.set("sni",sni);
 
-const newLink=`vless://${uuid}@${domain}:443?${params.toString()}#${remark}`;
+const newLink=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}`;
 
 document.getElementById("resultLink").value=newLink;
 
@@ -157,17 +139,7 @@ alert("Invalid VLESS format");
 }
 }
 
-// Copy
-function copyResult(){
-const text=document.getElementById("resultLink");
-text.select();
-document.execCommand("copy");
-}
-
-if('serviceWorker'in navigator){
-navigator.serviceWorker.register('./service-worker.js');
-}
-
 </script>
+
 </body>
 </html>
