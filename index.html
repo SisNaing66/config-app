@@ -8,35 +8,71 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body{font-family:sans-serif;}
-.portBtn{
-padding:10px;
-border-radius:12px;
-background:#e5e7eb;
+body{
+font-family: 'Poppins', sans-serif;
+transition:0.3s;
 }
-.portBtn.active{
-background:#6366f1;
+
+.glass{
+backdrop-filter: blur(20px);
+background: rgba(255,255,255,0.7);
+}
+
+.dark .glass{
+background: rgba(17,24,39,0.8);
+}
+
+.portBtn{
+padding:12px;
+border-radius:14px;
+background:#e5e7eb;
+transition:0.3s;
+font-weight:600;
+}
+
+.dark .portBtn{
+background:#374151;
 color:white;
+}
+
+.portBtn.active{
+background:linear-gradient(45deg,#6366f1,#8b5cf6);
+color:white;
+}
+
+.toast{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+background:#111827;
+color:white;
+padding:10px 20px;
+border-radius:30px;
+opacity:0;
+transition:0.3s;
+}
+
+.toast.show{
+opacity:1;
 }
 </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient-to-br from-indigo-200 to-purple-200 dark:from-gray-900 dark:to-gray-800 min-h-screen flex items-center justify-center p-4">
 
-<div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
+<div class="glass w-full max-w-md rounded-3xl shadow-2xl p-8">
 
-<h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">
+<div class="flex justify-between items-center mb-6">
+<h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
 Config Transformer
 </h1>
+<button onclick="toggleTheme()" class="text-xl">🌓</button>
+</div>
 
-<!-- TARGET DOMAIN -->
-<label class="font-semibold">Target Domain</label>
-<input id="targetDomain" type="text"
-class="w-full p-2 mb-4 rounded border">
-
-<!-- TARGET PORT -->
+<!-- PORT -->
 <label class="font-semibold">Target Port</label>
-<div class="grid grid-cols-3 gap-2 mb-4">
+<div class="grid grid-cols-3 gap-3 my-4">
 <button onclick="setPort(443)" class="portBtn active">443</button>
 <button onclick="setPort(2053)" class="portBtn">2053</button>
 <button onclick="setPort(2083)" class="portBtn">2083</button>
@@ -49,8 +85,8 @@ class="w-full p-2 mb-4 rounded border">
 <!-- SNI -->
 <label class="font-semibold">SNI / Bug Domain</label>
 <select id="sniSelect" onchange="handleSNIChange()"
-class="w-full p-2 mb-3 rounded border">
-<option value="default">Default (Use Target Domain)</option>
+class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600">
+<option value="">Use Target Server</option>
 <option value="mpt.com.mm">mpt.com.mm</option>
 <option value="speedtest.net">speedtest.net</option>
 <option value="wavemoney.com.mm">wavemoney.com.mm</option>
@@ -59,30 +95,47 @@ class="w-full p-2 mb-3 rounded border">
 
 <input id="customSNI" type="text"
 placeholder="Enter Custom SNI"
-class="w-full p-2 mb-4 rounded border hidden">
+class="w-full p-3 mb-4 rounded-xl border hidden dark:bg-gray-700 dark:border-gray-600">
 
 <!-- TARGET SERVER -->
 <label class="font-semibold">Target Server Address</label>
 <input id="targetServer" type="text"
-class="w-full p-2 mb-4 rounded border">
+class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600">
 
 <!-- ORIGINAL -->
 <label class="font-semibold">Original VLESS</label>
 <textarea id="originalLink" rows="3"
-class="w-full p-2 mb-4 rounded border"></textarea>
+class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600"></textarea>
 
 <button onclick="generateCustomLink()"
-class="w-full bg-indigo-600 text-white py-2 rounded mb-4">
+class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold my-4">
 Generate
 </button>
 
+<div class="relative">
 <textarea id="resultLink" rows="3"
-class="w-full p-2 rounded border"
+class="w-full p-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600"
 readonly></textarea>
+
+<button onclick="copyResult()"
+class="absolute right-3 top-3 bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm">
+Copy
+</button>
+</div>
+
+<div class="text-center mt-6 text-sm text-gray-600 dark:text-gray-300">
+Developer - <span class="font-semibold">SisNaing</span>
+</div>
 
 </div>
 
+<div id="toast" class="toast">Copy Successful ✅</div>
+
 <script>
+
+function toggleTheme(){
+document.documentElement.classList.toggle("dark");
+}
 
 function setPort(port){
 document.getElementById("selectedPort").value=port;
@@ -103,16 +156,15 @@ custom.classList.add("hidden");
 }
 
 function generateCustomLink(){
-const domain=document.getElementById("targetDomain").value.trim();
 const original=document.getElementById("originalLink").value.trim();
 const port=document.getElementById("selectedPort").value;
 const server=document.getElementById("targetServer").value.trim();
 
 let sni=document.getElementById("sniSelect").value;
-if(sni==="default") sni=domain;
 if(sni==="custom") sni=document.getElementById("customSNI").value.trim();
+if(!sni) sni=server;
 
-if(!domain||!original.startsWith("vless://")||!server){
+if(!original.startsWith("vless://")||!server){
 alert("Check input");return;
 }
 
@@ -127,16 +179,24 @@ const params=new URLSearchParams();
 params.set("path",path);
 params.set("security","tls");
 params.set("type","ws");
-params.set("host",domain);
+params.set("host",server);
 params.set("sni",sni);
 
 const newLink=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}`;
-
 document.getElementById("resultLink").value=newLink;
 
 }catch{
 alert("Invalid VLESS format");
 }
+}
+
+function copyResult(){
+const text=document.getElementById("resultLink").value;
+navigator.clipboard.writeText(text);
+
+const toast=document.getElementById("toast");
+toast.classList.add("show");
+setTimeout(()=>toast.classList.remove("show"),2000);
 }
 
 </script>
