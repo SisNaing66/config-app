@@ -8,59 +8,28 @@
 
 <style>
 body{font-family:system-ui;transition:.3s;}
-
-/* Animated BG */
 .bg-animate{
 background:linear-gradient(-45deg,#6366f1,#9333ea,#ec4899,#3b82f6);
 background-size:400% 400%;
 animation:gradient 12s ease infinite;
-transition:background .3s;
 }
-.dark .bg-animate{
-background:#111827;
-}
-
 @keyframes gradient{
 0%{background-position:0% 50%}
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
-
-/* Card */
 .card{
 backdrop-filter:blur(20px);
-background:rgba(255,255,255,.8);
-transition:.3s;
+background:rgba(255,255,255,.85);
 }
-.dark .card{
-background:rgba(17,24,39,.95);
-color:white;
-}
-
-/* Inputs Dark */
-.dark input,
-.dark textarea,
-.dark select{
-background:#374151;
-color:white;
-border:1px solid #4b5563;
-}
-
-/* Port */
 .portBtn{
 padding:14px;border-radius:18px;background:#f1f5f9;
 font-weight:600;transition:.3s;
-}
-.dark .portBtn{
-background:#374151;
-color:white;
 }
 .portBtn.active{
 background:linear-gradient(135deg,#6366f1,#9333ea);
 color:white;
 }
-
-/* Toast */
 .toast{
 position:fixed;bottom:30px;left:50%;
 transform:translateX(-50%);
@@ -72,23 +41,16 @@ opacity:0;transition:.3s;
 </style>
 </head>
 
-<body class="bg-animate min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+<body class="bg-animate min-h-screen flex items-center justify-center p-4">
 
 <div class="card w-full max-w-md rounded-3xl shadow-2xl p-8">
 
-<div class="flex justify-between items-center mb-6">
-<h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+<h1 class="text-2xl font-bold mb-6 text-indigo-600">
 Config Transformer
 </h1>
 
-<button onclick="toggleTheme()"
-class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-xl">
-<span id="themeIcon">🌙</span>
-</button>
-</div>
-
 <!-- PORT -->
-<label class="font-semibold">Target Port</label>
+<label class="font-semibold">Port</label>
 <div class="grid grid-cols-3 gap-3 my-3">
 <button onclick="setPort(443)" class="portBtn active">443</button>
 <button onclick="setPort(2053)" class="portBtn">2053</button>
@@ -99,37 +61,21 @@ class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-xl">
 </div>
 <input type="hidden" id="selectedPort" value="443">
 
-<!-- SNI -->
-<label class="font-semibold">SNI / Bug Domain</label>
-<select id="sniSelect" class="w-full p-3 rounded-xl border my-3">
-<option value="default">Default (Use Target Server)</option>
+<!-- BUG DOMAIN -->
+<label class="font-semibold">Bug (Address Target)</label>
+<select id="bugDomain" class="w-full p-3 rounded-xl border my-3">
 <option value="mpt.com.mm">mpt.com.mm</option>
 <option value="speedtest.net">speedtest.net</option>
 <option value="wavemoney.com.mm">wavemoney.com.mm</option>
-<option value="custom">Custom SNI Input</option>
 </select>
 
-<input id="customSNI"
-class="w-full p-3 rounded-xl border hidden"
-placeholder="Enter Custom SNI">
+<!-- ORIGINAL DOMAIN -->
+<label class="font-semibold">Original Domain (for SNI/Host)</label>
+<input id="originalDomain"
+class="w-full p-3 rounded-xl border my-3"
+placeholder="Enter Original Domain">
 
-<!-- SERVER -->
-<label class="font-semibold">Target Server</label>
-<input id="targetServer"
-class="w-full p-3 rounded-xl border my-3">
-
-<div class="flex gap-3 mb-4">
-<button onclick="saveServer()"
-class="flex-1 bg-indigo-600 text-white py-2 rounded-xl">
-Save
-</button>
-<button onclick="clearServer()"
-class="flex-1 bg-gray-300 dark:bg-gray-600 py-2 rounded-xl">
-Clear
-</button>
-</div>
-
-<!-- ORIGINAL -->
+<!-- ORIGINAL KEY -->
 <label class="font-semibold">Original VLESS</label>
 <textarea id="originalLink"
 rows="3"
@@ -137,7 +83,7 @@ class="w-full p-3 rounded-xl border my-3"></textarea>
 
 <button onclick="generateLink()"
 class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl my-4">
-Generate
+Transform Config
 </button>
 
 <textarea id="resultLink"
@@ -150,68 +96,11 @@ class="mt-3 bg-indigo-600 text-white px-4 py-1 rounded-lg">
 Copy
 </button>
 
-<div class="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
-Developer - <span class="font-semibold">SisNaing</span>
 </div>
 
-</div>
-
-<div id="toast" class="toast">Saved</div>
+<div id="toast" class="toast">Copied</div>
 
 <script>
-
-/* DARK MODE */
-function toggleTheme(){
-document.documentElement.classList.toggle("dark");
-const isDark=document.documentElement.classList.contains("dark");
-localStorage.setItem("theme",isDark?"dark":"light");
-document.getElementById("themeIcon").innerText=isDark?"☀️":"🌙";
-}
-
-/* Load Theme */
-window.addEventListener("load",function(){
-const savedTheme=localStorage.getItem("theme");
-if(savedTheme==="dark"){
-document.documentElement.classList.add("dark");
-document.getElementById("themeIcon").innerText="☀️";
-}
-const saved=localStorage.getItem("savedServer");
-if(saved){
-document.getElementById("targetServer").value=saved;
-}
-});
-
-/* Save Server */
-function saveServer(){
-const server=document.getElementById("targetServer").value.trim();
-if(!server){alert("Enter Server First");return;}
-localStorage.setItem("savedServer",server);
-showToast("Server Saved ✅");
-}
-
-/* Clear Server */
-function clearServer(){
-localStorage.removeItem("savedServer");
-document.getElementById("targetServer").value="";
-showToast("Server Cleared ❌");
-}
-
-/* Toast */
-function showToast(msg){
-const t=document.getElementById("toast");
-t.innerText=msg;
-t.classList.add("show");
-setTimeout(()=>t.classList.remove("show"),2000);
-}
-
-/* SNI Toggle */
-document.getElementById("sniSelect").addEventListener("change",function(){
-if(this.value==="custom"){
-document.getElementById("customSNI").classList.remove("hidden");
-}else{
-document.getElementById("customSNI").classList.add("hidden");
-}
-});
 
 /* Port */
 function setPort(port){
@@ -222,41 +111,47 @@ if(btn.innerText==port)btn.classList.add("active");
 });
 }
 
-/* Generate */
+/* Generate Working Key */
 function generateLink(){
+
 const original=document.getElementById("originalLink").value.trim();
-const server=document.getElementById("targetServer").value.trim();
+const bug=document.getElementById("bugDomain").value;
+const originalDomain=document.getElementById("originalDomain").value.trim();
 const port=document.getElementById("selectedPort").value;
 
-let sni=document.getElementById("sniSelect").value;
-if(sni==="default") sni=server;
-if(sni==="custom") sni=document.getElementById("customSNI").value.trim();
-
-if(!original.startsWith("vless://")||!server){
-alert("Check input");return;
+if(!original.startsWith("vless://")||!bug||!originalDomain){
+alert("Fill all fields");return;
 }
 
 const parts=original.split('#');
 const url=new URL(parts[0]);
+
 const uuid=url.username;
 const remark=parts[1]||"";
-const path=url.searchParams.get("path")||"/";
+const path=url.searchParams.get("path")||"%2F";
 
+/* EXACT WORKING FORMAT */
 const params=new URLSearchParams();
 params.set("path",path);
 params.set("security","tls");
+params.set("alpn","http/1.1");
+params.set("encryption","none");
+params.set("host",originalDomain);
+params.set("fp","chrome");
 params.set("type","ws");
-params.set("host",server);
-params.set("sni",sni);
+params.set("sni",originalDomain);
 
-const link=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}`;
-document.getElementById("resultLink").value=link;
+const finalKey=`vless://${uuid}@${bug}:${port}?${params.toString()}#${remark}`;
+
+document.getElementById("resultLink").value=finalKey;
 }
 
 /* Copy */
 function copyResult(){
 navigator.clipboard.writeText(document.getElementById("resultLink").value);
-showToast("Copy Successful ✅");
+const t=document.getElementById("toast");
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2000);
 }
 
 </script>
