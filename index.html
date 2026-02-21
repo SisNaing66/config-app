@@ -3,76 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Config Transformer</title>
-
+<title>Premium Config Transformer</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
 body{
-font-family: 'Poppins', sans-serif;
+font-family:system-ui;
 transition:0.3s;
+overflow-x:hidden;
 }
 
-.glass{
-backdrop-filter: blur(20px);
+/* Animated Background */
+.bg-animate{
+background:linear-gradient(-45deg,#6366f1,#9333ea,#ec4899,#3b82f6);
+background-size:400% 400%;
+animation:gradient 12s ease infinite;
+}
+@keyframes gradient{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+/* Glass Card */
+.card{
+backdrop-filter: blur(25px);
 background: rgba(255,255,255,0.7);
 }
-
-.dark .glass{
+.dark .card{
 background: rgba(17,24,39,0.8);
 }
 
+/* Port */
 .portBtn{
-padding:12px;
-border-radius:14px;
-background:#e5e7eb;
-transition:0.3s;
+padding:14px;
+border-radius:18px;
+background:#f1f5f9;
 font-weight:600;
+transition:0.3s;
 }
-
-.dark .portBtn{
-background:#374151;
-color:white;
-}
-
+.dark .portBtn{background:#374151;color:white;}
 .portBtn.active{
-background:linear-gradient(45deg,#6366f1,#8b5cf6);
+background:linear-gradient(135deg,#6366f1,#9333ea);
 color:white;
+transform:scale(1.05);
 }
 
+/* Toast */
 .toast{
 position:fixed;
-bottom:20px;
+bottom:30px;
 left:50%;
 transform:translateX(-50%);
 background:#111827;
 color:white;
-padding:10px 20px;
+padding:12px 25px;
 border-radius:30px;
 opacity:0;
-transition:0.3s;
+transition:0.4s;
 }
-
-.toast.show{
-opacity:1;
-}
+.toast.show{opacity:1;}
 </style>
 </head>
 
-<body class="bg-gradient-to-br from-indigo-200 to-purple-200 dark:from-gray-900 dark:to-gray-800 min-h-screen flex items-center justify-center p-4">
+<body class="bg-animate min-h-screen flex items-center justify-center p-4">
 
-<div class="glass w-full max-w-md rounded-3xl shadow-2xl p-8">
-
-<div class="flex justify-between items-center mb-6">
-<h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-Config Transformer
-</h1>
-<button onclick="toggleTheme()" class="text-xl">🌓</button>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="card w-full max-w-sm p-8 rounded-3xl shadow-2xl text-center">
+<h2 class="text-xl font-bold mb-4">Admin Login</h2>
+<input id="passwordInput" type="password"
+placeholder="Enter Password"
+class="w-full p-3 rounded-xl border mb-4">
+<button onclick="login()"
+class="w-full bg-indigo-600 text-white py-2 rounded-xl">
+Login
+</button>
 </div>
 
-<!-- PORT -->
-<label class="font-semibold">Target Port</label>
-<div class="grid grid-cols-3 gap-3 my-4">
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden card w-full max-w-md rounded-3xl shadow-2xl p-8">
+
+<div class="flex justify-between items-center mb-6">
+<h1 class="text-2xl font-bold text-indigo-600">
+Config Transformer
+</h1>
+<button onclick="toggleTheme()">🌓</button>
+</div>
+
+<!-- Tabs -->
+<div class="flex mb-6">
+<button onclick="showSingle()" class="flex-1 bg-indigo-600 text-white py-2 rounded-l-xl">Single</button>
+<button onclick="showBulk()" class="flex-1 bg-gray-300 py-2 rounded-r-xl">Bulk</button>
+</div>
+
+<!-- SINGLE MODE -->
+<div id="singleMode">
+
+<label>Target Port</label>
+<div class="grid grid-cols-3 gap-3 my-3">
 <button onclick="setPort(443)" class="portBtn active">443</button>
 <button onclick="setPort(2053)" class="portBtn">2053</button>
 <button onclick="setPort(2083)" class="portBtn">2083</button>
@@ -82,48 +110,52 @@ Config Transformer
 </div>
 <input type="hidden" id="selectedPort" value="443">
 
-<!-- SNI -->
-<label class="font-semibold">SNI / Bug Domain</label>
-<select id="sniSelect" onchange="handleSNIChange()"
-class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600">
-<option value="">Use Target Server</option>
-<option value="mpt.com.mm">mpt.com.mm</option>
-<option value="speedtest.net">speedtest.net</option>
-<option value="wavemoney.com.mm">wavemoney.com.mm</option>
-<option value="custom">Custom Input...</option>
-</select>
+<label>Target Server</label>
+<input id="targetServer" class="w-full p-3 rounded-xl border my-3">
 
-<input id="customSNI" type="text"
-placeholder="Enter Custom SNI"
-class="w-full p-3 mb-4 rounded-xl border hidden dark:bg-gray-700 dark:border-gray-600">
+<div class="flex gap-3 mb-4">
+<button onclick="saveServer()" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl">Save</button>
+<button onclick="clearServer()" class="flex-1 bg-gray-300 py-2 rounded-xl">Clear</button>
+</div>
 
-<!-- TARGET SERVER -->
-<label class="font-semibold">Target Server Address</label>
-<input id="targetServer" type="text"
-class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600">
-
-<!-- ORIGINAL -->
-<label class="font-semibold">Original VLESS</label>
+<label>Original VLESS</label>
 <textarea id="originalLink" rows="3"
-class="w-full p-3 my-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600"></textarea>
+class="w-full p-3 rounded-xl border my-3"></textarea>
 
-<button onclick="generateCustomLink()"
-class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold my-4">
+<button onclick="generateSingle()"
+class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl my-4">
 Generate
 </button>
 
-<div class="relative">
 <textarea id="resultLink" rows="3"
-class="w-full p-3 rounded-xl border dark:bg-gray-700 dark:border-gray-600"
+class="w-full p-3 rounded-xl border"
 readonly></textarea>
 
-<button onclick="copyResult()"
-class="absolute right-3 top-3 bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm">
-Copy
-</button>
+<button onclick="copyResult()" class="mt-2 bg-indigo-600 text-white px-4 py-1 rounded-lg">Copy</button>
+
 </div>
 
-<div class="text-center mt-6 text-sm text-gray-600 dark:text-gray-300">
+<!-- BULK MODE -->
+<div id="bulkMode" class="hidden">
+
+<label>Bulk VLESS (One per line)</label>
+<textarea id="bulkInput" rows="6"
+class="w-full p-3 rounded-xl border my-3"></textarea>
+
+<button onclick="generateBulk()"
+class="w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 rounded-xl my-4">
+Generate Bulk
+</button>
+
+<textarea id="bulkResult" rows="6"
+class="w-full p-3 rounded-xl border"
+readonly></textarea>
+
+<button onclick="copyBulk()" class="mt-2 bg-indigo-600 text-white px-4 py-1 rounded-lg">Copy All</button>
+
+</div>
+
+<div class="text-center mt-6 text-sm text-gray-600">
 Developer - <span class="font-semibold">SisNaing</span>
 </div>
 
@@ -133,10 +165,35 @@ Developer - <span class="font-semibold">SisNaing</span>
 
 <script>
 
+/* PASSWORD SYSTEM */
+const ADMIN_PASSWORD="1234"; // change this
+
+function login(){
+const pass=document.getElementById("passwordInput").value;
+if(pass===ADMIN_PASSWORD){
+document.getElementById("loginScreen").classList.add("hidden");
+document.getElementById("mainApp").classList.remove("hidden");
+}else{
+alert("Wrong Password");
+}
+}
+
+/* THEME */
 function toggleTheme(){
 document.documentElement.classList.toggle("dark");
 }
 
+/* Tabs */
+function showSingle(){
+document.getElementById("singleMode").classList.remove("hidden");
+document.getElementById("bulkMode").classList.add("hidden");
+}
+function showBulk(){
+document.getElementById("singleMode").classList.add("hidden");
+document.getElementById("bulkMode").classList.remove("hidden");
+}
+
+/* Port */
 function setPort(port){
 document.getElementById("selectedPort").value=port;
 document.querySelectorAll(".portBtn").forEach(btn=>{
@@ -145,30 +202,27 @@ if(btn.innerText==port)btn.classList.add("active");
 });
 }
 
-function handleSNIChange(){
-const value=document.getElementById("sniSelect").value;
-const custom=document.getElementById("customSNI");
-if(value==="custom"){
-custom.classList.remove("hidden");
-}else{
-custom.classList.add("hidden");
+/* Save Server */
+function saveServer(){
+localStorage.setItem("savedServer",document.getElementById("targetServer").value);
 }
+function clearServer(){
+localStorage.removeItem("savedServer");
+document.getElementById("targetServer").value="";
+}
+window.onload=function(){
+const saved=localStorage.getItem("savedServer");
+if(saved) document.getElementById("targetServer").value=saved;
 }
 
-function generateCustomLink(){
+/* Generate Single */
+function generateSingle(){
 const original=document.getElementById("originalLink").value.trim();
-const port=document.getElementById("selectedPort").value;
 const server=document.getElementById("targetServer").value.trim();
+const port=document.getElementById("selectedPort").value;
 
-let sni=document.getElementById("sniSelect").value;
-if(sni==="custom") sni=document.getElementById("customSNI").value.trim();
-if(!sni) sni=server;
+if(!original.startsWith("vless://")) return alert("Invalid");
 
-if(!original.startsWith("vless://")||!server){
-alert("Check input");return;
-}
-
-try{
 const parts=original.split('#');
 const url=new URL(parts[0]);
 const uuid=url.username;
@@ -180,23 +234,53 @@ params.set("path",path);
 params.set("security","tls");
 params.set("type","ws");
 params.set("host",server);
-params.set("sni",sni);
 
-const newLink=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}`;
-document.getElementById("resultLink").value=newLink;
-
-}catch{
-alert("Invalid VLESS format");
-}
+const link=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}`;
+document.getElementById("resultLink").value=link;
 }
 
+/* Bulk */
+function generateBulk(){
+const lines=document.getElementById("bulkInput").value.split("\n");
+const server=document.getElementById("targetServer").value.trim();
+const port=document.getElementById("selectedPort").value;
+
+let output="";
+
+lines.forEach(line=>{
+if(line.startsWith("vless://")){
+const parts=line.split('#');
+const url=new URL(parts[0]);
+const uuid=url.username;
+const remark=parts[1]||"";
+const path=url.searchParams.get("path")||"/";
+
+const params=new URLSearchParams();
+params.set("path",path);
+params.set("security","tls");
+params.set("type","ws");
+params.set("host",server);
+
+output+=`vless://${uuid}@${server}:${port}?${params.toString()}#${remark}\n`;
+}
+});
+
+document.getElementById("bulkResult").value=output;
+}
+
+/* Copy */
 function copyResult(){
-const text=document.getElementById("resultLink").value;
-navigator.clipboard.writeText(text);
-
-const toast=document.getElementById("toast");
-toast.classList.add("show");
-setTimeout(()=>toast.classList.remove("show"),2000);
+navigator.clipboard.writeText(document.getElementById("resultLink").value);
+showToast();
+}
+function copyBulk(){
+navigator.clipboard.writeText(document.getElementById("bulkResult").value);
+showToast();
+}
+function showToast(){
+const t=document.getElementById("toast");
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2000);
 }
 
 </script>
