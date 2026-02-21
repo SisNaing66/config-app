@@ -7,17 +7,19 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body{
-font-family:system-ui;
-transition:.3s;
-}
+body{font-family:system-ui;transition:.3s;}
 
 /* Animated BG */
 .bg-animate{
 background:linear-gradient(-45deg,#6366f1,#9333ea,#ec4899,#3b82f6);
 background-size:400% 400%;
 animation:gradient 12s ease infinite;
+transition:background .3s;
 }
+.dark .bg-animate{
+background:#111827;
+}
+
 @keyframes gradient{
 0%{background-position:0% 50%}
 50%{background-position:100% 50%}
@@ -27,19 +29,31 @@ animation:gradient 12s ease infinite;
 /* Card */
 .card{
 backdrop-filter:blur(20px);
-background:rgba(255,255,255,.7);
+background:rgba(255,255,255,.8);
+transition:.3s;
 }
 .dark .card{
-background:rgba(17,24,39,.8);
+background:rgba(17,24,39,.95);
+color:white;
+}
+
+/* Inputs Dark */
+.dark input,
+.dark textarea,
+.dark select{
+background:#374151;
+color:white;
+border:1px solid #4b5563;
 }
 
 /* Port */
 .portBtn{
-padding:14px;
-border-radius:18px;
-background:#f1f5f9;
-font-weight:600;
-transition:.3s;
+padding:14px;border-radius:18px;background:#f1f5f9;
+font-weight:600;transition:.3s;
+}
+.dark .portBtn{
+background:#374151;
+color:white;
 }
 .portBtn.active{
 background:linear-gradient(135deg,#6366f1,#9333ea);
@@ -48,28 +62,30 @@ color:white;
 
 /* Toast */
 .toast{
-position:fixed;
-bottom:30px;
-left:50%;
+position:fixed;bottom:30px;left:50%;
 transform:translateX(-50%);
-background:#111827;
-color:white;
-padding:10px 20px;
-border-radius:30px;
-opacity:0;
-transition:.3s;
+background:#111827;color:white;
+padding:10px 20px;border-radius:30px;
+opacity:0;transition:.3s;
 }
 .toast.show{opacity:1;}
 </style>
 </head>
 
-<body class="bg-animate min-h-screen flex items-center justify-center p-4">
+<body class="bg-animate min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
 
 <div class="card w-full max-w-md rounded-3xl shadow-2xl p-8">
 
-<h1 class="text-2xl font-bold mb-6 text-indigo-600">
+<div class="flex justify-between items-center mb-6">
+<h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
 Config Transformer
 </h1>
+
+<button onclick="toggleTheme()"
+class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-xl">
+<span id="themeIcon">🌙</span>
+</button>
+</div>
 
 <!-- PORT -->
 <label class="font-semibold">Target Port</label>
@@ -83,10 +99,9 @@ Config Transformer
 </div>
 <input type="hidden" id="selectedPort" value="443">
 
-<!-- SNI SYSTEM -->
+<!-- SNI -->
 <label class="font-semibold">SNI / Bug Domain</label>
-<select id="sniSelect"
-class="w-full p-3 rounded-xl border my-3">
+<select id="sniSelect" class="w-full p-3 rounded-xl border my-3">
 <option value="default">Default (Use Target Server)</option>
 <option value="mpt.com.mm">mpt.com.mm</option>
 <option value="speedtest.net">speedtest.net</option>
@@ -102,6 +117,17 @@ placeholder="Enter Custom SNI">
 <label class="font-semibold">Target Server</label>
 <input id="targetServer"
 class="w-full p-3 rounded-xl border my-3">
+
+<div class="flex gap-3 mb-4">
+<button onclick="saveServer()"
+class="flex-1 bg-indigo-600 text-white py-2 rounded-xl">
+Save
+</button>
+<button onclick="clearServer()"
+class="flex-1 bg-gray-300 dark:bg-gray-600 py-2 rounded-xl">
+Clear
+</button>
+</div>
 
 <!-- ORIGINAL -->
 <label class="font-semibold">Original VLESS</label>
@@ -124,17 +150,61 @@ class="mt-3 bg-indigo-600 text-white px-4 py-1 rounded-lg">
 Copy
 </button>
 
-<div class="text-center mt-6 text-sm text-gray-600">
+<div class="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
 Developer - <span class="font-semibold">SisNaing</span>
 </div>
 
 </div>
 
-<div id="toast" class="toast">Copy Successful ✅</div>
+<div id="toast" class="toast">Saved</div>
 
 <script>
 
-/* SNI Custom Toggle */
+/* DARK MODE */
+function toggleTheme(){
+document.documentElement.classList.toggle("dark");
+const isDark=document.documentElement.classList.contains("dark");
+localStorage.setItem("theme",isDark?"dark":"light");
+document.getElementById("themeIcon").innerText=isDark?"☀️":"🌙";
+}
+
+/* Load Theme */
+window.addEventListener("load",function(){
+const savedTheme=localStorage.getItem("theme");
+if(savedTheme==="dark"){
+document.documentElement.classList.add("dark");
+document.getElementById("themeIcon").innerText="☀️";
+}
+const saved=localStorage.getItem("savedServer");
+if(saved){
+document.getElementById("targetServer").value=saved;
+}
+});
+
+/* Save Server */
+function saveServer(){
+const server=document.getElementById("targetServer").value.trim();
+if(!server){alert("Enter Server First");return;}
+localStorage.setItem("savedServer",server);
+showToast("Server Saved ✅");
+}
+
+/* Clear Server */
+function clearServer(){
+localStorage.removeItem("savedServer");
+document.getElementById("targetServer").value="";
+showToast("Server Cleared ❌");
+}
+
+/* Toast */
+function showToast(msg){
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+/* SNI Toggle */
 document.getElementById("sniSelect").addEventListener("change",function(){
 if(this.value==="custom"){
 document.getElementById("customSNI").classList.remove("hidden");
@@ -159,7 +229,6 @@ const server=document.getElementById("targetServer").value.trim();
 const port=document.getElementById("selectedPort").value;
 
 let sni=document.getElementById("sniSelect").value;
-
 if(sni==="default") sni=server;
 if(sni==="custom") sni=document.getElementById("customSNI").value.trim();
 
@@ -187,9 +256,7 @@ document.getElementById("resultLink").value=link;
 /* Copy */
 function copyResult(){
 navigator.clipboard.writeText(document.getElementById("resultLink").value);
-const t=document.getElementById("toast");
-t.classList.add("show");
-setTimeout(()=>t.classList.remove("show"),2000);
+showToast("Copy Successful ✅");
 }
 
 </script>
