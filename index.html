@@ -21,7 +21,6 @@ animation:gradient 12s ease infinite;
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
-
 .card{
 backdrop-filter:blur(20px);
 background:rgba(255,255,255,.9);
@@ -69,16 +68,7 @@ Config Transformer
 </button>
 </div>
 
-<!-- TABS -->
-<div class="flex gap-2 mb-4">
-<button id="singleTab" onclick="setMode('single')" class="tabBtn tabActive flex-1">Single</button>
-<button id="bulkTab" onclick="setMode('bulk')" class="tabBtn flex-1 bg-gray-300">Bulk</button>
-<button id="historyTab" onclick="setMode('history')" class="tabBtn flex-1 bg-gray-300">History</button>
-</div>
-
-<!-- MAIN SECTION -->
-<div id="mainSection">
-
+<!-- PORT -->
 <label class="font-semibold">Port</label>
 <div class="grid grid-cols-3 gap-2 my-2">
 <button onclick="setPort(443)" class="portBtn active">443</button>
@@ -91,7 +81,7 @@ Config Transformer
 <input type="hidden" id="selectedPort" value="443">
 
 <label class="font-semibold">Bug (Address Target)</label>
-<select id="bugDomain" class="w-full p-3 rounded-xl border my-2" onchange="saveBug()">
+<select id="bugDomain" class="w-full p-3 rounded-xl border my-2">
 <option value="mpt.com.mm">mpt.com.mm</option>
 <option value="speedtest.net">speedtest.net</option>
 <option value="wavemoney.com.mm">wavemoney.com.mm</option>
@@ -107,6 +97,15 @@ Config Transformer
 <label class="font-semibold mt-2">Original Domain (SNI/Host)</label>
 <input id="originalDomain" class="w-full p-3 rounded-xl border my-2">
 
+<div class="flex gap-2 mb-3">
+<button onclick="saveDomain()" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl">
+Save
+</button>
+<button onclick="clearDomain()" class="flex-1 bg-gray-300 dark:bg-gray-600 py-2 rounded-xl">
+Clear
+</button>
+</div>
+
 <label class="font-semibold mt-2">Original VLESS</label>
 <textarea id="originalLink" rows="3" class="w-full p-3 rounded-xl border my-2"></textarea>
 
@@ -121,33 +120,12 @@ Transform Config
 <button onclick="generateQR()" class="flex-1 bg-purple-600 text-white py-2 rounded-xl">QR</button>
 </div>
 
-</div>
-
-<!-- BULK SECTION -->
-<div id="bulkSection" class="hidden">
-<textarea id="bulkInput" rows="6" class="w-full p-3 rounded-xl border my-3"
-placeholder="Paste multiple VLESS links (one per line)"></textarea>
-<button onclick="transformBulk()" class="w-full bg-indigo-600 text-white py-2 rounded-xl">
-Transform Bulk
-</button>
-<textarea id="bulkResult" rows="6" class="w-full p-3 rounded-xl border my-3"></textarea>
-</div>
-
-<!-- HISTORY SECTION -->
-<div id="historySection" class="hidden">
-<div id="historyList" class="space-y-2"></div>
-<button onclick="clearHistory()" class="w-full bg-red-500 text-white py-2 rounded-xl mt-3">
-Clear History
-</button>
-</div>
-
 <div class="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
 Developer - <b>Sis Naing</b>
 </div>
 
 </div>
 
-<!-- QR MODAL -->
 <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
 <div class="bg-white p-6 rounded-xl">
 <canvas id="qrCanvas"></canvas>
@@ -155,7 +133,7 @@ Developer - <b>Sis Naing</b>
 </div>
 </div>
 
-<div id="toast" class="toast">Copied</div>
+<div id="toast" class="toast">Saved</div>
 
 <script>
 
@@ -172,6 +150,25 @@ document.documentElement.classList.add("dark");
 document.getElementById("themeIcon").innerText="☀️";
 }
 
+/* LOAD SAVED DOMAIN */
+if(localStorage.getItem("savedDomain")){
+document.getElementById("originalDomain").value=
+localStorage.getItem("savedDomain");
+}
+
+/* SAVE DOMAIN */
+function saveDomain(){
+let domain=document.getElementById("originalDomain").value.trim();
+if(!domain)return alert("Enter Domain First");
+localStorage.setItem("savedDomain",domain);
+showToast("Domain Saved ✅");
+}
+function clearDomain(){
+localStorage.removeItem("savedDomain");
+document.getElementById("originalDomain").value="";
+showToast("Domain Cleared ❌");
+}
+
 /* PORT */
 function setPort(port){
 document.getElementById("selectedPort").value=port;
@@ -181,18 +178,14 @@ if(b.innerText==port)b.classList.add("active");
 });
 }
 
-/* BUG SAVE */
-function saveBug(){
-let bug=document.getElementById("bugDomain").value;
-if(bug==="custom"){
+/* BUG */
+document.getElementById("bugDomain").addEventListener("change",function(){
+if(this.value==="custom"){
 document.getElementById("customBug").classList.remove("hidden");
 }else{
 document.getElementById("customBug").classList.add("hidden");
-localStorage.setItem("savedBug",bug);
 }
-}
-
-/* GET BUG */
+});
 function getBug(){
 let bug=document.getElementById("bugDomain").value;
 if(bug==="custom"){
@@ -202,11 +195,12 @@ return bug;
 }
 
 /* TRANSFORM */
-function buildConfig(original){
-const bug=getBug();
+function transformSingle(){
+const original=document.getElementById("originalLink").value.trim();
 const domain=document.getElementById("originalDomain").value.trim();
 const port=document.getElementById("selectedPort").value;
-if(!original||!domain)return "";
+const bug=getBug();
+if(!original||!domain||!bug)return alert("Fill all fields");
 
 const parts=original.split('#');
 const url=new URL(parts[0]);
@@ -224,54 +218,14 @@ params.set("fp","chrome");
 params.set("type","ws");
 params.set("sni",domain);
 
-return `vless://${uuid}@${bug}:${port}?${params.toString()}#${remark}`;
-}
-
-/* SINGLE */
-function transformSingle(){
-let final=buildConfig(document.getElementById("originalLink").value.trim());
-if(!final)return alert("Fill all fields");
+const final=`vless://${uuid}@${bug}:${port}?${params.toString()}#${remark}`;
 document.getElementById("resultLink").value=final;
-saveHistory(final);
 }
 
-/* BULK */
-function transformBulk(){
-let lines=document.getElementById("bulkInput").value.trim().split("\n");
-let results=lines.map(l=>buildConfig(l.trim())).filter(Boolean);
-document.getElementById("bulkResult").value=results.join("\n");
-results.forEach(saveHistory);
-}
-
-/* HISTORY */
-function saveHistory(key){
-let history=JSON.parse(localStorage.getItem("history")||"[]");
-history.unshift(key);
-localStorage.setItem("history",JSON.stringify(history.slice(0,30)));
-renderHistory();
-}
-function renderHistory(){
-let history=JSON.parse(localStorage.getItem("history")||"[]");
-let container=document.getElementById("historyList");
-container.innerHTML="";
-history.forEach(item=>{
-let div=document.createElement("div");
-div.className="p-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-sm break-all";
-div.innerText=item;
-container.appendChild(div);
-});
-}
-function clearHistory(){
-localStorage.removeItem("history");
-renderHistory();
-}
-
-/* MODE */
-function setMode(mode){
-document.getElementById("mainSection").classList.toggle("hidden",mode!=="single");
-document.getElementById("bulkSection").classList.toggle("hidden",mode!=="bulk");
-document.getElementById("historySection").classList.toggle("hidden",mode!=="history");
-if(mode==="history")renderHistory();
+/* COPY */
+function copyResult(){
+navigator.clipboard.writeText(document.getElementById("resultLink").value);
+showToast("Copied ✅");
 }
 
 /* QR */
@@ -283,15 +237,13 @@ QRCode.toCanvas(document.getElementById("qrCanvas"),text);
 }
 function closeQR(){document.getElementById("qrModal").classList.add("hidden");}
 
-/* COPY */
-function copyResult(){
-navigator.clipboard.writeText(document.getElementById("resultLink").value);
+/* TOAST */
+function showToast(msg){
 let t=document.getElementById("toast");
+t.innerText=msg;
 t.classList.add("show");
 setTimeout(()=>t.classList.remove("show"),2000);
 }
-
-renderHistory();
 
 </script>
 </body>
